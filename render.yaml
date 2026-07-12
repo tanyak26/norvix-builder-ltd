@@ -1,0 +1,5 @@
+services:
+  - type: static
+    name: norvix-builder-ltd
+    buildCommand: ""
+    publishPath: .
