@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
   <title>Norvix Builder logo mark</title>
   <defs>
-    <linearGradient id="cyan" x1="15" y1="18" x2="81" y2="78" gradientUnits="userSpaceOnUse">
+    <linearGradient id="sky" x1="16" y1="12" x2="80" y2="84" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#b9f3ff"/>
-      <stop offset="0.5" stop-color="#67d8ff"/>
-      <stop offset="1" stop-color="#1aa4d8"/>
+      <stop offset="1" stop-color="#67d8ff"/>
     </linearGradient>
   </defs>
-  <path d="M11 48 48 15l37 33" fill="none" stroke="url(#cyan)" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter"/>
+  <rect x="4" y="4" width="88" height="88" rx="18" fill="url(#sky)"/>
+  <path d="M11 48 48 15l37 33" fill="none" stroke="#10202b" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter"/>
   <path d="M22 80V40h13l26 28V40h13v40H61L35 52v28H22Z" fill="#10202b"/>
-  <path d="M19 84h58" stroke="url(#cyan)" stroke-width="7" stroke-linecap="square"/>
+  <path d="M19 84h58" stroke="#10202b" stroke-width="7" stroke-linecap="square"/>
   <path d="M63 22h14v17" fill="none" stroke="#10202b" stroke-width="7" stroke-linecap="square" stroke-linejoin="miter"/>
-  <path d="M31 37h10M31 45h10M55 37h10M55 45h10" stroke="#67d8ff" stroke-width="4" stroke-linecap="square"/>
+  <path d="M31 37h10M31 45h10M55 37h10M55 45h10" stroke="#f7f7f2" stroke-width="4" stroke-linecap="square"/>
 </svg>
