@@ -15,10 +15,27 @@ const types = {
   ".svg": "image/svg+xml",
 };
 
+function sendFile(res, filePath) {
+  fs.readFile(filePath, (error, data) => {
+    if (error) {
+      res.writeHead(error.code === "ENOENT" ? 404 : 500, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end(error.code === "ENOENT" ? "Not found" : "Server error");
+      return;
+    }
+
+    res.writeHead(200, {
+      "Content-Type": types[path.extname(filePath)] || "application/octet-stream",
+      "X-Content-Type-Options": "nosniff",
+    });
+    res.end(data);
+  });
+}
+
 const server = http.createServer((req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const pathname = decodeURIComponent(url.pathname);
-  const filePath = path.join(root, pathname === "/" ? "index.html" : pathname);
+  const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  const cleanPath = decodeURIComponent(url.pathname).replace(/^\/+/, "");
+  const requestedPath = cleanPath || "index.html";
+  const filePath = path.resolve(root, requestedPath);
 
   if (!filePath.startsWith(root)) {
     res.writeHead(403);
@@ -26,18 +43,21 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  fs.readFile(filePath, (error, data) => {
-    if (error) {
-      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end("Not found");
+  fs.stat(filePath, (error, stats) => {
+    if (!error && stats.isDirectory()) {
+      sendFile(res, path.join(filePath, "index.html"));
       return;
     }
 
-    res.writeHead(200, { "Content-Type": types[path.extname(filePath)] || "application/octet-stream" });
-    res.end(data);
+    if (!error && stats.isFile()) {
+      sendFile(res, filePath);
+      return;
+    }
+
+    sendFile(res, path.join(root, "index.html"));
   });
 });
 
-server.listen(port, "127.0.0.1", () => {
+server.listen(port, () => {
   console.log(`Norvix Builder LTD site running at http://127.0.0.1:${port}`);
 });

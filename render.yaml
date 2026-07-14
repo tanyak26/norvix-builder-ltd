@@ -1,5 +1,6 @@
 services:
-  - type: static
+  - type: web
     name: norvix-builder-ltd
-    buildCommand: ""
-    publishPath: .
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
