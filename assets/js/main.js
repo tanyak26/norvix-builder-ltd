@@ -15,10 +15,52 @@ document.querySelectorAll("[data-year]").forEach((node) => {
 const contactForm = document.querySelector("[data-contact-form]");
 
 if (contactForm) {
-  const sentMessage = document.querySelector("[data-form-sent]");
-  const params = new URLSearchParams(window.location.search);
+  const statusMessage = document.querySelector("[data-form-status]");
+  const submitButton = contactForm.querySelector("[data-submit-button]");
+  const defaultButtonText = submitButton ? submitButton.textContent : "";
 
-  if (sentMessage && params.get("sent") === "1") {
-    sentMessage.hidden = false;
-  }
+  contactForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (statusMessage) {
+      statusMessage.hidden = true;
+      statusMessage.textContent = "";
+    }
+
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "Sending...";
+    }
+
+    try {
+      const response = await fetch(contactForm.action, {
+        method: "POST",
+        body: new FormData(contactForm),
+        headers: {
+          Accept: "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Form service failed");
+      }
+
+      contactForm.reset();
+
+      if (statusMessage) {
+        statusMessage.textContent = "Thank you. Your enquiry has been sent to Norvix Builder LTD.";
+        statusMessage.hidden = false;
+      }
+    } catch (error) {
+      if (statusMessage) {
+        statusMessage.textContent = "Sorry, the enquiry service is temporarily busy. Please try again or email info@norvixbuilderltd.co.uk.";
+        statusMessage.hidden = false;
+      }
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = defaultButtonText;
+      }
+    }
+  });
 }
