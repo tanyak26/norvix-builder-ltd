@@ -430,6 +430,10 @@ img {
   line-height: 1.15;
 }
 
+.section-dark .step h3 {
+  color: var(--ink);
+}
+
 .tile p,
 .step p,
 .project-band p,
