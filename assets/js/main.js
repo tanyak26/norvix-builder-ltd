@@ -24,6 +24,7 @@ if (contactForm) {
     const data = new FormData(contactForm);
     const name = String(data.get("name") || "").trim();
     const phone = String(data.get("phone") || "").trim();
+    const email = String(data.get("email") || "").trim();
     const service = String(data.get("service") || "").trim();
     const location = String(data.get("location") || "").trim();
     const message = String(data.get("message") || "").trim();
@@ -34,6 +35,7 @@ if (contactForm) {
         "",
         `Name: ${name}`,
         `Phone: ${phone}`,
+        `Email: ${email}`,
         `Service: ${service}`,
         `Project location: ${location || "Not provided"}`,
         "",
