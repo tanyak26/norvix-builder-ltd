@@ -33,10 +33,13 @@ if (contactForm) {
     }
 
     try {
+      const formData = new FormData(contactForm);
+      const payload = Object.fromEntries(formData.entries());
       const response = await fetch(contactForm.action, {
         method: "POST",
-        body: new FormData(contactForm),
+        body: JSON.stringify(payload),
         headers: {
+          "Content-Type": "application/json",
           Accept: "application/json"
         }
       });
