@@ -72,15 +72,76 @@ function getSmtpConfig() {
   return { host, port, user, pass, from, to };
 }
 
+function getResendConfig() {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.MAIL_FROM || "Norvix Builder <onboarding@resend.dev>";
+  const to = process.env.MAIL_TO || process.env.SMTP_TO || "info@norvixbuilderltd.co.uk";
+
+  if (!apiKey || !from || !to) {
+    return null;
+  }
+
+  return { apiKey, from, to };
+}
+
+async function sendWithResend(config, enquiry) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: config.from,
+      to: [config.to],
+      reply_to: enquiry.email,
+      subject: `New Norvix Builder LTD enquiry from ${enquiry.name}`,
+      text: enquiry.rows.map(([label, value]) => `${label}: ${value}`).join("\n"),
+      html: `<p>Someone submitted the Norvix Builder LTD website enquiry form.</p><table style="border-collapse:collapse;">${enquiry.htmlRows}</table>`,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Resend failed: ${response.status} ${details}`);
+  }
+}
+
+async function sendWithSmtp(config, enquiry) {
+  const transporter = nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.port === 465,
+    requireTLS: config.port !== 465,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    auth: {
+      user: config.user,
+      pass: config.pass,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"Norvix Builder Website" <${config.from}>`,
+    to: config.to,
+    replyTo: enquiry.email,
+    subject: `New Norvix Builder LTD enquiry from ${enquiry.name}`,
+    text: enquiry.rows.map(([label, value]) => `${label}: ${value}`).join("\n"),
+    html: `<p>Someone submitted the Norvix Builder LTD website enquiry form.</p><table style="border-collapse:collapse;">${enquiry.htmlRows}</table>`,
+  });
+}
+
 async function handleEnquiry(req, res) {
   if (req.method !== "POST") {
     sendJson(res, 405, { error: "Method not allowed" });
     return;
   }
 
+  const resend = getResendConfig();
   const smtp = getSmtpConfig();
 
-  if (!smtp) {
+  if (!resend && !smtp) {
     sendJson(res, 500, { error: "Email service is not configured" });
     return;
   }
@@ -99,20 +160,6 @@ async function handleEnquiry(req, res) {
       return;
     }
 
-    const transporter = nodemailer.createTransport({
-      host: smtp.host,
-      port: smtp.port,
-      secure: smtp.port === 465,
-      requireTLS: smtp.port !== 465,
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-      auth: {
-        user: smtp.user,
-        pass: smtp.pass,
-      },
-    });
-
     const rows = [
       ["Name", name],
       ["Phone", phone],
@@ -126,14 +173,13 @@ async function handleEnquiry(req, res) {
       .map(([label, value]) => `<tr><th align="left" style="padding:8px;border:1px solid #ddd;">${escapeHtml(label)}</th><td style="padding:8px;border:1px solid #ddd;">${escapeHtml(value)}</td></tr>`)
       .join("");
 
-    await transporter.sendMail({
-      from: `"Norvix Builder Website" <${smtp.from}>`,
-      to: smtp.to,
-      replyTo: email,
-      subject: `New Norvix Builder LTD enquiry from ${name}`,
-      text: rows.map(([label, value]) => `${label}: ${value}`).join("\n"),
-      html: `<p>Someone submitted the Norvix Builder LTD website enquiry form.</p><table style="border-collapse:collapse;">${htmlRows}</table>`,
-    });
+    const enquiry = { name, email, rows, htmlRows };
+
+    if (resend) {
+      await sendWithResend(resend, enquiry);
+    } else {
+      await sendWithSmtp(smtp, enquiry);
+    }
 
     sendJson(res, 200, { ok: true });
   } catch (error) {
