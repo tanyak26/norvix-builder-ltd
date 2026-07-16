@@ -65,6 +65,26 @@ img {
   backdrop-filter: blur(18px);
 }
 
+.top-strip {
+  border-bottom: 1px solid var(--line);
+  background: var(--deep);
+}
+
+.top-strip__inner {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 8px 0;
+  color: var(--paper);
+  font-size: 0.82rem;
+  font-weight: 760;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.top-strip a:hover {
+  color: var(--accent-3);
+}
+
 .nav-shell {
   width: min(1180px, calc(100% - 32px));
   min-height: 76px;
@@ -749,7 +769,7 @@ textarea {
     position: absolute;
     left: 16px;
     right: 16px;
-    top: 76px;
+    top: 112px;
     display: none;
     grid-column: 1 / -1;
     background: var(--surface);
@@ -818,6 +838,12 @@ textarea {
 }
 
 @media (max-width: 520px) {
+  .top-strip__inner {
+    width: min(1180px, calc(100% - 24px));
+    font-size: 0.76rem;
+    overflow-wrap: anywhere;
+  }
+
   .nav-shell,
   .container,
   .hero-wrap {
