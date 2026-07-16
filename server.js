@@ -12,7 +12,7 @@ const routes = new Map([
   ["projects", "projects.html"],
   ["process", "process.html"],
   ["contact", "contact.html"],
-  ["favicon.ico", "favicon.svg"],
+  ["favicon.ico", "favicon.ico"],
   ["favicon.svg", "favicon.svg"],
 ]);
 
@@ -21,6 +21,7 @@ const types = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".png": "image/png",
+  ".ico": "image/x-icon",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".svg": "image/svg+xml",
