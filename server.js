@@ -1,10 +1,18 @@
 const http = require("http");
+const https = require("https");
 const fs = require("fs");
 const path = require("path");
 const nodemailer = require("nodemailer");
 
 const root = __dirname;
 const port = Number(process.env.PORT || 3200);
+const routes = new Map([
+  ["", "index.html"],
+  ["services", "services.html"],
+  ["projects", "projects.html"],
+  ["process", "process.html"],
+  ["contact", "contact.html"],
+]);
 
 const types = {
   ".html": "text/html; charset=utf-8",
@@ -74,7 +82,7 @@ function getSmtpConfig() {
 
 function getResendConfig() {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.MAIL_FROM || "Norvix Builder <onboarding@resend.dev>";
+  const from = process.env.MAIL_FROM || "Norvix Builder <website@norvixbuilderltd.co.uk>";
   const to = process.env.MAIL_TO || process.env.SMTP_TO || "info@norvixbuilderltd.co.uk";
 
   if (!apiKey || !from || !to) {
@@ -85,26 +93,53 @@ function getResendConfig() {
 }
 
 async function sendWithResend(config, enquiry) {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${config.apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: config.from,
-      to: [config.to],
-      reply_to: enquiry.email,
-      subject: `New Norvix Builder LTD enquiry from ${enquiry.name}`,
-      text: enquiry.rows.map(([label, value]) => `${label}: ${value}`).join("\n"),
-      html: `<p>Someone submitted the Norvix Builder LTD website enquiry form.</p><table style="border-collapse:collapse;">${enquiry.htmlRows}</table>`,
-    }),
+  const payload = JSON.stringify({
+    from: config.from,
+    to: [config.to],
+    reply_to: enquiry.email,
+    subject: `New Norvix Builder LTD enquiry from ${enquiry.name}`,
+    text: enquiry.rows.map(([label, value]) => `${label}: ${value}`).join("\n"),
+    html: `<p>Someone submitted the Norvix Builder LTD website enquiry form.</p><table style="border-collapse:collapse;">${enquiry.htmlRows}</table>`,
   });
 
-  if (!response.ok) {
-    const details = await response.text();
-    throw new Error(`Resend failed: ${response.status} ${details}`);
-  }
+  await new Promise((resolve, reject) => {
+    const request = https.request(
+      {
+        hostname: "api.resend.com",
+        path: "/emails",
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(payload),
+        },
+        timeout: 15000,
+      },
+      (response) => {
+        let details = "";
+
+        response.on("data", (chunk) => {
+          details += chunk;
+        });
+
+        response.on("end", () => {
+          if (response.statusCode >= 200 && response.statusCode < 300) {
+            resolve();
+            return;
+          }
+
+          reject(new Error(`Resend failed: ${response.statusCode} ${details}`));
+        });
+      }
+    );
+
+    request.on("timeout", () => {
+      request.destroy(new Error("Resend request timed out"));
+    });
+    request.on("error", reject);
+    request.write(payload);
+    request.end();
+  });
 }
 
 async function sendWithSmtp(config, enquiry) {
@@ -212,8 +247,18 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (url.pathname.endsWith(".html")) {
+    const cleanUrl = url.pathname === "/index.html" ? "/" : url.pathname.replace(/\.html$/, "");
+    res.writeHead(301, {
+      Location: cleanUrl + url.search,
+      "X-Content-Type-Options": "nosniff",
+    });
+    res.end();
+    return;
+  }
+
   const cleanPath = decodeURIComponent(url.pathname).replace(/^\/+/, "");
-  const requestedPath = cleanPath || "index.html";
+  const requestedPath = routes.get(cleanPath) || cleanPath || "index.html";
   const filePath = path.resolve(root, requestedPath);
 
   if (!filePath.startsWith(root)) {

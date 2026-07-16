@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://norvixbuilderltd.co.uk/sitemap.xml
