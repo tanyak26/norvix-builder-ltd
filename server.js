@@ -12,6 +12,8 @@ const routes = new Map([
   ["projects", "projects.html"],
   ["process", "process.html"],
   ["contact", "contact.html"],
+  ["favicon.ico", "favicon.svg"],
+  ["favicon.svg", "favicon.svg"],
 ]);
 
 const types = {
