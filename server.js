@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 
 const root = __dirname;
 const port = Number(process.env.PORT || 3200);
+const host = process.env.HOST || "0.0.0.0";
 const routes = new Map([
   ["", "index.html"],
   ["services", "services.html"],
@@ -287,6 +288,6 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(port, () => {
-  console.log(`Norvix Builder LTD site running at http://127.0.0.1:${port}`);
+server.listen(port, host, () => {
+  console.log(`Norvix Builder LTD site running at http://${host}:${port}`);
 });
